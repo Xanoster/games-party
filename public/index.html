@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+  <meta name="theme-color" content="#05060a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Party Link" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="description" content="Host party games with friends - Truth or Dare, Never Have I Ever, Who's Most Likely, and more. No downloads, no logins." />
+  <title>Party Link – Multiplayer Party Games</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
+  <!-- Splash screens for iOS -->
+  <meta name="apple-mobile-web-app-title" content="Party Link" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-left">
+        <button id="homeBtn" class="home-btn" hidden title="Leave and go home">🏠</button>
+        <div>
+          <p class="eyebrow">🎉 Party Games Hub</p>
+          <h1>One link. Multiple games. Pure chaos.</h1>
+        </div>
+      </div>
+      <div class="pill">🔗 Local Multiplayer</div>
+    </header>
+
+    <section class="card" id="connect-card">
+      <div class="row">
+        <label class="field">
+          <span>Your display name</span>
+          <input id="nameInput" type="text" placeholder="Enter your name..." maxlength="16" autocomplete="off" spellcheck="false" />
+        </label>
+        
+        <!-- Normal mode: host + join options -->
+        <div class="actions" id="hostActions">
+          <button id="hostBtn" class="primary">🎮 Host a Room</button>
+          <div class="join-row">
+            <input id="roomInput" type="text" placeholder="ABC" maxlength="3" autocomplete="off" spellcheck="false" style="text-transform: uppercase;" />
+            <button id="joinBtn" class="secondary">Join</button>
+          </div>
+        </div>
+        
+        <!-- QR join mode: only join button, no host option -->
+        <div class="actions" id="joinOnlyActions" style="display: none;">
+          <p class="join-info">Joining room <strong id="joiningRoomCode">---</strong></p>
+          <button id="joinOnlyBtn" class="primary large">🚀 Join Game</button>
+        </div>
+      </div>
+      <p id="status" class="status">Connecting...</p>
+    </section>
+
+    <!-- ===== HOST ROOM CARD ===== -->
+    <section class="card" id="host-room-card" hidden>
+      <div class="room-header">
+        <div class="room-info">
+          <p class="eyebrow">🏠 Room Code</p>
+          <h2 id="hostRoomCode" class="room-code-display">---</h2>
+          <p class="muted">👑 You are the host</p>
+        </div>
+        <div class="qr-section">
+          <div id="qrCode" class="qr"></div>
+          <p class="muted tiny">Scan to join</p>
+        </div>
+      </div>
+      <div class="players-section">
+        <p class="eyebrow">👥 Players (<span id="hostPlayerCount">0</span>)</p>
+        <ul id="hostPlayerList" class="player-list"></ul>
+      </div>
+      <button id="hostLeaveBtn" class="leave-btn">🚪 Leave Room</button>
+    </section>
+
+    <!-- ===== PLAYER ROOM CARD (minimal) ===== -->
+    <section class="card player-card" id="player-room-card" hidden>
+      <div class="player-room-bar">
+        <span class="room-pill">🎮 <span id="playerRoomCode">---</span></span>
+        <span class="player-count-pill">👥 <span id="playerPlayerCount">0</span></span>
+        <button id="playerLeaveBtn" class="leave-text-btn">Leave</button>
+      </div>
+    </section>
+
+    <section class="card" id="control-card" hidden>
+      <div class="control-head">
+        <div>
+          <p class="eyebrow">🎛️ Host Controls</p>
+          <h3 id="controlTitle">Pick a Game</h3>
+          <p class="muted">Select a game to play. Everyone syncs automatically.</p>
+        </div>
+        <label class="field mini">
+          <span>🎨 Theme</span>
+          <select id="themeSelect">
+            <option value="classic">Classic</option>
+            <option value="party" selected>Party 🎉</option>
+            <option value="after-dark">After Dark 18+ 🔥</option>
+          </select>
+        </label>
+      </div>
+      <div id="gameGrid" class="game-grid"></div>
+    </section>
+
+    <section class="card" id="current-card" hidden>
+      <div class="current-head">
+        <div>
+          <p class="eyebrow">🎮 Now Playing</p>
+          <h3 id="currentTitle">-</h3>
+          <p class="muted" id="currentBlurb"></p>
+        </div>
+        <div class="badge-row">
+          <div id="gameBadges" class="badge-row"></div>
+          <button id="switchGame" class="secondary">🔄 Switch</button>
+        </div>
+      </div>
+      <div id="gameContainer"></div>
+    </section>
+  </div>
+  
+  <div id="toast" class="toast"></div>
+  
+  <script src="https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
