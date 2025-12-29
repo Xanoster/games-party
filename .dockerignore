@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+Dockerfile
+.fly
+.git
+.gitignore
+coverage
+build
+dist
+*.log
