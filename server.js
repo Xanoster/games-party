@@ -134,7 +134,6 @@ const handleCreateRoom = (ws, clientId, payload) => {
     payload: {
       roomCode,
       selfId: clientId,
-      joinUrl: `${getLocalUrl()}/?room=${roomCode}`,
       settings: room.settings,
     },
   });
@@ -184,7 +183,6 @@ const handleJoinRoom = (ws, clientId, payload) => {
       payload: {
         roomCode,
         selfId: clientId,
-        joinUrl: `${getLocalUrl()}/?room=${roomCode}`,
         settings: room.settings,
       },
     });

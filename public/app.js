@@ -441,9 +441,9 @@ const updateRoomUI = () => {
     if (playersSection) playersSection.style.display = 'block';
     if (leaveBtn) leaveBtn.style.display = 'inline-block';
     
-    // Generate QR for host
+    // Generate QR for host - always use current origin for correct URL
     if (qrBlock && qrHint) {
-      const qrTarget = state.joinUrl || `${location.origin}/?room=${state.roomCode}`;
+      const qrTarget = `${location.origin}/?room=${state.roomCode}`;
       if (!state.qr) {
         state.qr = new QRCode(el('qr'), {
           text: qrTarget,
