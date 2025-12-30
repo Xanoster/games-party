@@ -426,9 +426,18 @@ const updateRoomUI = () => {
   
   // Host sees full header with QR, players see minimal badge
   if (isHost) {
-    if (roomHeader) roomHeader.style.display = 'flex';
-    if (qrBlock) qrBlock.style.display = 'flex';
-    if (playerRoomInfo) playerRoomInfo.style.display = 'none';
+    if (roomHeader) {
+      roomHeader.hidden = false;
+      roomHeader.style.display = 'flex';
+    }
+    if (qrBlock) {
+      qrBlock.hidden = false;
+      qrBlock.style.display = 'flex';
+    }
+    if (playerRoomInfo) {
+      playerRoomInfo.hidden = true;
+      playerRoomInfo.style.display = 'none';
+    }
     if (playersSection) playersSection.style.display = 'block';
     if (leaveBtn) leaveBtn.style.display = 'inline-block';
     
@@ -452,9 +461,18 @@ const updateRoomUI = () => {
     }
   } else {
     // Players see minimal room info - just a badge with inline leave
-    if (roomHeader) roomHeader.style.display = 'none';
-    if (qrBlock) qrBlock.style.display = 'none';
-    if (playerRoomInfo) playerRoomInfo.style.display = 'flex';
+    if (roomHeader) {
+      roomHeader.hidden = true;
+      roomHeader.style.display = 'none';
+    }
+    if (qrBlock) {
+      qrBlock.hidden = true;
+      qrBlock.style.display = 'none';
+    }
+    if (playerRoomInfo) {
+      playerRoomInfo.hidden = false;
+      playerRoomInfo.style.display = 'flex';
+    }
     if (roomCodeSmall) roomCodeSmall.textContent = state.roomCode;
     if (playersSection) playersSection.style.display = 'none';
     if (leaveBtn) leaveBtn.style.display = 'none';
