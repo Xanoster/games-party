@@ -1,4 +1,4 @@
-const CACHE = 'party-cache-v7';
+const CACHE = 'party-cache-v8';
 const ASSETS = [
   '/',
   '/index.html',
