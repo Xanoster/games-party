@@ -401,83 +401,84 @@ const renderCurrent = () => {
 
 const updateRoomUI = () => {
   if (!state.roomCode) return;
-  
   const isHost = state.hostId === state.clientId;
+  el('room-card').hidden = false;
+  el('control-card').hidden = !isHost;
+  el('current-card').hidden = false;
+  el('roomCode').textContent = state.roomCode;
+  el('hostTag').textContent = isHost ? '👑 You are the host' : '🎮 Following host controls';
   
-  // Show home button when in room
+  // Show home button when in a room
   el('homeBtn').hidden = false;
   
-  // Hide connect card
-  el('connect-card').hidden = true;
+  // Update player count
+  const playerCount = el('playerCount');
+  if (playerCount) playerCount.textContent = state.players.length;
   
-  // Show appropriate room card based on role
-  const hostCard = el('host-room-card');
-  const playerCard = el('player-room-card');
-  const controlCard = el('control-card');
-  const currentCard = el('current-card');
+  const qrBlock = el('qrBlock');
+  const qrHint = el('qrHint');
+  const roomHeader = el('roomHeader');
+  const playerRoomInfo = el('playerRoomInfo');
+  const playersSection = el('playersSection');
+  const roomCodeSmall = el('roomCodeSmall');
+  const leaveBtn = el('leaveBtn');
+  const leaveBtnSmall = el('leaveBtnSmall');
   
+  // Host sees full header with QR, players see minimal badge
   if (isHost) {
-    // HOST VIEW
-    hostCard.hidden = false;
-    playerCard.hidden = true;
-    controlCard.hidden = false;
+    if (roomHeader) roomHeader.style.display = 'flex';
+    if (qrBlock) qrBlock.style.display = 'flex';
+    if (playerRoomInfo) playerRoomInfo.style.display = 'none';
+    if (playersSection) playersSection.style.display = 'block';
+    if (leaveBtn) leaveBtn.style.display = 'inline-block';
     
-    // Update host room info
-    el('hostRoomCode').textContent = state.roomCode;
-    el('hostPlayerCount').textContent = state.players.length;
-    
-    // Generate QR code
-    const qrContainer = el('qrCode');
-    const qrTarget = state.joinUrl || `${location.origin}/?room=${state.roomCode}`;
-    
-    if (!state.qr && qrContainer) {
-      state.qr = new QRCode(qrContainer, {
-        text: qrTarget,
-        width: 120,
-        height: 120,
-        colorDark: '#79ffd6',
-        colorLight: '#0b0d10',
-        correctLevel: QRCode.CorrectLevel.M,
-      });
-    } else if (state.qr) {
-      state.qr.clear();
-      state.qr.makeCode(qrTarget);
+    // Generate QR for host
+    if (qrBlock && qrHint) {
+      const qrTarget = state.joinUrl || `${location.origin}/?room=${state.roomCode}`;
+      if (!state.qr) {
+        state.qr = new QRCode(el('qr'), {
+          text: qrTarget,
+          width: 140,
+          height: 140,
+          colorDark: '#79ffd6',
+          colorLight: '#0b0d10',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+      } else {
+        state.qr.clear();
+        state.qr.makeCode(qrTarget);
+      }
+      qrHint.textContent = 'Scan to join instantly';
     }
-    
-    // Update player list
-    const list = el('hostPlayerList');
-    list.innerHTML = '';
-    state.players.forEach((p) => {
-      const li = document.createElement('li');
-      li.textContent = p.name;
-      if (p.isHost) {
-        const badge = document.createElement('span');
-        badge.className = 'badge host-badge';
-        badge.textContent = '👑';
-        li.appendChild(badge);
-      }
-      if (p.id === state.clientId) {
-        const badge = document.createElement('span');
-        badge.className = 'badge you-badge';
-        badge.textContent = 'You';
-        li.appendChild(badge);
-      }
-      list.appendChild(li);
-    });
-    
   } else {
-    // PLAYER VIEW (minimal)
-    hostCard.hidden = true;
-    playerCard.hidden = false;
-    controlCard.hidden = true;
-    
-    // Update player room info
-    el('playerRoomCode').textContent = state.roomCode;
-    el('playerPlayerCount').textContent = state.players.length;
+    // Players see minimal room info - just a badge with inline leave
+    if (roomHeader) roomHeader.style.display = 'none';
+    if (qrBlock) qrBlock.style.display = 'none';
+    if (playerRoomInfo) playerRoomInfo.style.display = 'flex';
+    if (roomCodeSmall) roomCodeSmall.textContent = state.roomCode;
+    if (playersSection) playersSection.style.display = 'none';
+    if (leaveBtn) leaveBtn.style.display = 'none';
   }
   
-  // Always show current game card
-  currentCard.hidden = false;
+  const list = el('playerList');
+  list.innerHTML = '';
+  state.players.forEach((p) => {
+    const li = document.createElement('li');
+    li.textContent = p.name;
+    if (p.isHost) {
+      const badge = document.createElement('span');
+      badge.className = 'badge host-badge';
+      badge.textContent = '👑 Host';
+      li.appendChild(badge);
+    }
+    if (p.id === state.clientId) {
+      const badge = document.createElement('span');
+      badge.className = 'badge you-badge';
+      badge.textContent = '⭐ You';
+      li.appendChild(badge);
+    }
+    list.appendChild(li);
+  });
 };
 
 const send = (type, payload) => socket.send(JSON.stringify({ type, payload }));
@@ -1301,24 +1302,23 @@ const initUI = () => {
     };
   }
   
-  // Leave room buttons
+  // Leave room buttons (both regular and small)
   const leaveAction = () => {
     if (!state.roomCode) return;
     goHome();
   };
   
-  // Host leave button
-  const hostLeaveBtn = el('hostLeaveBtn');
-  if (hostLeaveBtn) hostLeaveBtn.onclick = leaveAction;
-  
-  // Player leave button
-  const playerLeaveBtn = el('playerLeaveBtn');
-  if (playerLeaveBtn) playerLeaveBtn.onclick = leaveAction;
+  el('leaveBtn').onclick = leaveAction;
+  if (el('leaveBtnSmall')) {
+    el('leaveBtnSmall').onclick = leaveAction;
+  }
   
   // Home button
   el('homeBtn').onclick = () => {
     if (state.roomCode) {
-      goHome();
+      if (confirm('Leave the room and go home?')) {
+        goHome();
+      }
     } else {
       goHome();
     }
@@ -1335,27 +1335,16 @@ const goHome = () => {
   state.players = [];
   state.hostId = '';
   state.qr = null;
-  
-  // Reset UI
   el('connect-card').hidden = false;
-  el('host-room-card').hidden = true;
-  el('player-room-card').hidden = true;
+  el('room-card').hidden = true;
   el('control-card').hidden = true;
   el('current-card').hidden = true;
   el('homeBtn').hidden = true;
-  
-  // Clear QR code
-  const qrEl = el('qrCode');
-  if (qrEl) qrEl.innerHTML = '';
-  
+  el('qr').innerHTML = '';
   // Reset to normal UI (not join-only mode)
-  const hostActions = el('hostActions');
-  const joinOnlyActions = el('joinOnlyActions');
-  if (hostActions) hostActions.style.display = 'flex';
-  if (joinOnlyActions) joinOnlyActions.style.display = 'none';
-  
+  el('hostActions').hidden = false;
+  el('joinOnlyActions').hidden = true;
   el('roomInput').value = '';
-  
   // Clear URL params
   history.replaceState({}, '', location.pathname);
   showToast('👋 Back to home.', 'info');

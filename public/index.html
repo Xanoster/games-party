@@ -59,33 +59,33 @@
       <p id="status" class="status">Connecting...</p>
     </section>
 
-    <!-- ===== HOST ROOM CARD ===== -->
-    <section class="card" id="host-room-card" hidden>
-      <div class="room-header">
-        <div class="room-info">
-          <p class="eyebrow">🏠 Room Code</p>
-          <h2 id="hostRoomCode" class="room-code-display">---</h2>
-          <p class="muted">👑 You are the host</p>
+    <section class="card compact" id="room-card" hidden>
+      <!-- Full room header for HOST only -->
+      <div class="room-header" id="roomHeader" hidden>
+        <div>
+          <p class="eyebrow">🏠 Room</p>
+          <h2 id="roomCode">-</h2>
+          <p class="muted" id="hostTag"></p>
         </div>
-        <div class="qr-section">
-          <div id="qrCode" class="qr"></div>
-          <p class="muted tiny">Scan to join</p>
+        <div class="room-right">
+          <div class="qr-block" id="qrBlock" hidden>
+            <div id="qr" class="qr"></div>
+            <p class="muted tiny" id="qrHint">Scan to join</p>
+          </div>
         </div>
       </div>
-      <div class="players-section">
-        <p class="eyebrow">👥 Players (<span id="hostPlayerCount">0</span>)</p>
-        <ul id="hostPlayerList" class="player-list"></ul>
+      
+      <!-- Minimal info for PLAYERS (non-host) -->
+      <div class="player-room-info" id="playerRoomInfo" hidden>
+        <span class="room-badge">🎮 <span id="roomCodeSmall">-</span></span>
+        <button id="leaveBtnSmall" class="leave-link">Leave</button>
       </div>
-      <button id="hostLeaveBtn" class="leave-btn">🚪 Leave Room</button>
-    </section>
-
-    <!-- ===== PLAYER ROOM CARD (minimal) ===== -->
-    <section class="card player-card" id="player-room-card" hidden>
-      <div class="player-room-bar">
-        <span class="room-pill">🎮 <span id="playerRoomCode">---</span></span>
-        <span class="player-count-pill">👥 <span id="playerPlayerCount">0</span></span>
-        <button id="playerLeaveBtn" class="leave-text-btn">Leave</button>
+      
+      <div class="players" id="playersSection">
+        <p class="eyebrow">👥 Players (<span id="playerCount">0</span>)</p>
+        <ul id="playerList"></ul>
       </div>
+      <button id="leaveBtn" class="ghost danger-ghost small-leave">🚪 Leave</button>
     </section>
 
     <section class="card" id="control-card" hidden>
