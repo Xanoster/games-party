@@ -4,7 +4,6 @@ import { WebSocketServer } from 'ws';
 import os from 'os';
 import path from 'path';
 import crypto from 'crypto';
-import fetch from 'node-fetch';
 import { fileURLToPath } from 'url';
 
 const app = express();
@@ -12,10 +11,9 @@ const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+app.use(express.json());
 
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
@@ -72,49 +70,6 @@ const publishPlayers = (roomCode) => {
   broadcast(roomCode, { type: 'players-update', payload: { players } });
 };
 
-// Lightweight AI prompt proxy so the API key stays on the server (Gemini)
-app.post('/api/ai-prompt', async (req, res) => {
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(400).json({ error: 'AI key not configured on server.' });
-  }
-
-  const { gameId, mode, category, theme, players = [], recent = [] } = req.body || {};
-  const names = players.map((p) => p?.name).filter(Boolean).slice(0, 12);
-  const vibe = theme || 'classic';
-  const dedupeNote = recent.length ? `Avoid these: ${recent.slice(-15).join(' | ')}` : 'Do not repeat recent prompts.';
-
-  const system = `You craft ultra-short, punchy prompts for party games. Max 120 characters. No numbering, no quotes, no emojis unless essential. Match the vibe (${vibe}).`;
-  const user = `Game: ${gameId || 'truth-or-dare'}; Mode: ${mode || 'prompt'}; Category: ${category || 'any'}; Audience names: ${names.join(', ') || 'friends'}. ${dedupeNote}`;
-
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          { role: 'user', parts: [{ text: `${system}\n\n${user}` }] },
-        ],
-        generationConfig: {
-          temperature: 0.95,
-          maxOutputTokens: 120,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Gemini error ${response.status}: ${text}`);
-    }
-
-    const data = await response.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-    const cleaned = raw.split('\n')[0].replace(/^[-*\d.\s]+/, '').trim();
-    return res.json({ prompt: cleaned });
-  } catch (err) {
-    console.error('AI prompt error:', err.message);
-    return res.status(500).json({ error: 'Failed to generate prompt.' });
-  }
-});
 
 const removePlayer = (clientId, notifyClient = false) => {
   const client = clients.get(clientId);

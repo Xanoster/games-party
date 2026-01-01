@@ -52,11 +52,9 @@ npm start
 
 Open `http://localhost:3000` in your browser.
 
-### AI prompts (optional)
+### Prompts
 
-- Set `GEMINI_API_KEY` in your env before running the server to enable dynamic questions.
-- Optionally set `GEMINI_MODEL` (default: `gemini-1.5-flash`).
-- Without a key, the app falls back to the built-in prompt lists.
+All prompt lists are bundled locally (100 per category). No external AI is required.
 
 ---
 

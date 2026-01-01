@@ -52,7 +52,6 @@ const state = {
   likely: { round: null, votes: {} },
   spy: { round: null, votes: {} },
   usedPrompts: {},
-  aiUnavailable: false,
 };
 
 const randomFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -316,18 +315,11 @@ const spyWords = [
   'Airport', 'Cinema', 'Library', 'Arcade', 'Rooftop', 'Beach', 'Museum', 'Coffee shop', 'Supermarket', 'Gym'
 ];
 
-const aiSuggestPrompts = (theme, gameId, mode) => {
-  // Placeholder for AI prompt sourcing; returns themed filler lines.
-  const tag = theme === 'after-dark' ? 'After Dark' : theme === 'party' ? 'Party' : 'Classic';
-  return [`${tag} ${gameId} spark #${Math.floor(Math.random() * 999)}`];
-};
-
 const themedTruthList = (mode, category) => {
   const theme = state.settings.theme;
   const base = truthPrompts[mode][category] || [];
   const themeExtras = themeTruthPrompts[theme]?.[mode]?.[category] || [];
-  const ai = aiSuggestPrompts(theme, 'truth', mode);
-  return [...base, ...themeExtras, ...ai];
+  return [...base, ...themeExtras];
 };
 
 const renderTabs = () => {
@@ -396,41 +388,6 @@ const pickUniquePrompt = (bucket, list) => {
   return choice;
 };
 
-const fetchAIPrompt = async ({ gameId, mode, category, bucket }) => {
-  try {
-    const res = await fetch('/api/ai-prompt', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        gameId,
-        mode,
-        category,
-        theme: state.settings.theme,
-        players: state.players,
-        recent: bucket ? state.usedPrompts[bucket] || [] : [],
-      }),
-    });
-    if (!res.ok) {
-      if (res.status === 400 && !state.aiUnavailable) {
-        showToast('AI prompts disabled (no API key). Using local list.', 'warning');
-      }
-      state.aiUnavailable = true;
-      return null;
-    }
-    const data = await res.json();
-    const prompt = data?.prompt || null;
-    if (!prompt) state.aiUnavailable = true;
-    return prompt;
-  } catch (err) {
-    console.error('AI prompt fetch failed', err);
-    if (!state.aiUnavailable) {
-      showToast('AI prompts unavailable. Falling back to local.', 'warning');
-    }
-    state.aiUnavailable = true;
-    return null;
-  }
-};
-
 // Enhanced status with class
 const setStatus = (msg, statusClass = '') => {
   const statusEl = el('status');
@@ -440,72 +397,7 @@ const setStatus = (msg, statusClass = '') => {
   }
 };
 
-// Enhanced AI prompt generator
-const generateAIPrompt = (mode, category, players) => {
-  if (!players || players.length < 2) return null;
-  const randomPlayer = () => players[Math.floor(Math.random() * players.length)]?.name || 'someone';
-  
-  const templates = {
-    truth: {
-      Soft: [
-        `If ${randomPlayer()} had a secret talent show, what would they perform?`,
-        `What would ${randomPlayer()} be famous for in 10 years?`,
-        `What app do you think ${randomPlayer()} uses the most?`,
-      ],
-      Spicy: [
-        `Who in this room would ${randomPlayer()} swipe right on?`,
-        `What secret do you think ${randomPlayer()} is hiding?`,
-      ],
-      Brutal: [
-        `What would ${randomPlayer()} never admit to the group?`,
-        `Who would ${randomPlayer()} vote off the island first?`,
-      ],
-      'Friends-only': [
-        `What is ${randomPlayer()}'s most predictable behavior?`,
-        `Who would ${randomPlayer()} call for bail money at 3am?`,
-      ],
-    },
-    dare: {
-      Soft: [
-        `Do your best impression of ${randomPlayer()}.`,
-        `Give ${randomPlayer()} a genuine compliment.`,
-      ],
-      Spicy: [
-        `Demonstrate how you think ${randomPlayer()} flirts.`,
-        `Tell ${randomPlayer()} what you first thought when you met them.`,
-      ],
-      Brutal: [
-        `Roast ${randomPlayer()} for 30 seconds straight.`,
-        `Tell ${randomPlayer()} a hard truth they need to hear.`,
-      ],
-      'Friends-only': [
-        `Recreate ${randomPlayer()}'s signature pose.`,
-        `Rate ${randomPlayer()}'s fashion sense.`,
-      ],
-    },
-  };
-  
-  const modeTemplates = templates[mode];
-  if (modeTemplates && modeTemplates[category]) {
-    const arr = modeTemplates[category];
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-  return null;
-};
-
-// Enhanced themed truth list with AI
-const themedTruthListEnhanced = (mode, category) => {
-  const theme = state.settings.theme;
-  const base = truthPrompts[mode]?.[category] || [];
-  const themeExtras = themeTruthPrompts[theme]?.[mode]?.[category] || [];
-  const aiPrompt = generateAIPrompt(mode, category, state.players);
-  
-  const allPrompts = [...base, ...themeExtras];
-  if (aiPrompt && Math.random() > 0.5) {
-    allPrompts.push(aiPrompt);
-  }
-  return allPrompts;
-};
+// No external AI; prompts are local. pickUniquePrompt handles variety.
 
 const renderGameGrid = () => {
   const grid = el('gameGrid');
@@ -815,17 +707,12 @@ const renderTruth = () => {
   };
 
   // Choose Truth or Dare - called by selected person
-  const chooseMode = async (mode) => {
+  const chooseMode = (mode) => {
     if (!state.truth.round) return;
     if (state.clientId !== state.truth.round.targetId) return; // Only selected person
     const bucket = `truth-${mode}-${state.truth.category}`;
-    let prompt = await fetchAIPrompt({ gameId: 'truth-or-dare', mode, category: state.truth.category, bucket });
-    if (prompt) {
-      rememberPrompt(bucket, prompt);
-    } else {
-      const promptList = themedTruthListEnhanced ? themedTruthListEnhanced(mode, state.truth.category) : themedTruthList(mode, state.truth.category);
-      prompt = pickUniquePrompt(bucket, promptList);
-    }
+    const promptList = themedTruthList(mode, state.truth.category);
+    const prompt = pickUniquePrompt(bucket, promptList);
     if (!prompt) return;
     state.truth.round.mode = mode;
     state.truth.round.prompt = prompt;
@@ -955,14 +842,9 @@ const renderNHI = () => {
   
   if (isHost) {
     const btn = el('nhiStart');
-    if (btn) btn.onclick = async () => {
+    if (btn) btn.onclick = () => {
       const bucket = 'nhi';
-      let statement = await fetchAIPrompt({ gameId: 'never-have-i-ever', mode: 'statement', bucket });
-      if (statement) {
-        rememberPrompt(bucket, statement);
-      } else {
-        statement = pickUniquePrompt(bucket, nhiStatements);
-      }
+      const statement = pickUniquePrompt(bucket, nhiStatements);
       if (!statement) return;
       const round = { statement };
       state.nhi.round = round;
@@ -1039,14 +921,9 @@ const renderLikely = () => {
   
   if (isHost) {
     const btn = el('likelyStart');
-    if (btn) btn.onclick = async () => {
+    if (btn) btn.onclick = () => {
       const bucket = 'likely';
-      let question = await fetchAIPrompt({ gameId: 'most-likely', mode: 'callout', bucket });
-      if (question) {
-        rememberPrompt(bucket, question);
-      } else {
-        question = pickUniquePrompt(bucket, likelyQuestions);
-      }
+      const question = pickUniquePrompt(bucket, likelyQuestions);
       if (!question) return;
       const round = { question };
       state.likely.round = round;
