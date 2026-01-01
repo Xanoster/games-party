@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
@@ -87,7 +87,7 @@ app.post('/api/ai-prompt', async (req, res) => {
   const user = `Game: ${gameId || 'truth-or-dare'}; Mode: ${mode || 'prompt'}; Category: ${category || 'any'}; Audience names: ${names.join(', ') || 'friends'}. ${dedupeNote}`;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

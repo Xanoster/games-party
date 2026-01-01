@@ -55,7 +55,7 @@ Open `http://localhost:3000` in your browser.
 ### AI prompts (optional)
 
 - Set `GEMINI_API_KEY` in your env before running the server to enable dynamic questions.
-- Optionally set `GEMINI_MODEL` (default: `gemini-1.5-flash-latest`).
+- Optionally set `GEMINI_MODEL` (default: `gemini-1.5-flash`).
 - Without a key, the app falls back to the built-in prompt lists.
 
 ---

@@ -64,58 +64,157 @@ const games = [
   { id: 'spy', label: 'Impostor / Spy', blurb: 'Hidden spy. Location word. Vote them out.', tags: ['Hidden role'] },
 ];
 
-const truthPrompts = {
+// Utility to produce 100 varied prompts from template + subject lists
+const buildList = (templates, subjects, max = 100) => {
+  const out = [];
+  if (!templates.length || !subjects.length) return out;
+  for (let i = 0; out.length < max; i += 1) {
+    const t = templates[i % templates.length];
+    const s = subjects[i % subjects.length];
+    out.push(t.replace('{x}', s));
+  }
+  return out;
+};
+
+const truthSeeds = {
   truth: {
-    Soft: [
-      'What is your most overused emoji?',
-      'What is a harmless secret you never told?',
-      'Who here do you text the most?',
-      'What is your pettiest opinion?',
-    ],
-    Spicy: [
-      'Who was your last late-night text?',
-      'What is the boldest DM you ever sent?',
-      'Who in this circle would you date?',
-      'What is a fantasy you have not shared?',
-    ],
-    Brutal: [
-      'What do you dislike about the person on your left?',
-      'What is your most recent lie?',
-      'Which friend has the worst taste?',
-      'When did you ghost someone?',
-    ],
-    'Friends-only': [
-      'Who keeps the worst secrets in this group?',
-      'Who is always late and why?',
-      'What did you judge someone here for?',
-      'What is the group drama you never confessed?',
-    ],
+    Soft: {
+      templates: [
+        'What is {x} for you right now?',
+        'When was the last time you felt {x}?',
+        'Who here would you tell about {x}?',
+        'What is your go-to {x}?',
+        'What do you secretly love about {x}?',
+      ],
+      subjects: [
+        'pure joy', 'a calm morning', 'a small win', 'a guilty pleasure', 'a cozy Sunday',
+        'your comfort food', 'your playlist on repeat', 'a weird habit', 'being productive', 'being lazy',
+        'texting someone first', 'apologizing', 'asking for help', 'trying new food', 'late-night chats',
+        'sharing memes', 'planning trips', 'showing affection', 'dancing badly', 'singing in the shower'
+      ],
+    },
+    Spicy: {
+      templates: [
+        'Whose DM would you never ignore and why {x}?',
+        'What is your boldest take about {x}?',
+        'Describe your ideal {x} night in one line.',
+        'What is the most daring thing you did about {x}?',
+        'Who here matches your energy for {x}?',
+      ],
+      subjects: [
+        'flirting', 'taking risks', 'dating apps', 'first dates', 'late-night calls',
+        'being confident', 'shooting your shot', 'spontaneous plans', 'romantic surprises', 'being vulnerable',
+        'sharing secrets', 'saying no', 'setting boundaries', 'making the first move', 'owning your vibe',
+        'telling the truth', 'taking compliments', 'giving compliments', 'style glow-ups', 'party nights'
+      ],
+    },
+    Brutal: {
+      templates: [
+        'What truth about {x} do you avoid saying?',
+        'What was your harsh lesson about {x}?',
+        'What do you need to cut out regarding {x}?',
+        'What is your most unpopular opinion on {x}?',
+        'When did {x} backfire on you?',
+      ],
+      subjects: [
+        'friend drama', 'overpromising', 'procrastinating', 'people-pleasing', 'ghosting',
+        'dating choices', 'time management', 'money habits', 'trust issues', 'oversharing',
+        'jealousy', 'ego', 'career risks', 'loyalty tests', 'being honest',
+        'apologizing late', 'forgiving too fast', 'holding grudges', 'self-doubt', 'comfort zones'
+      ],
+    },
+    'Friends-only': {
+      templates: [
+        'Who here you rely on for {x}?',
+        'What do you appreciate about our {x}?',
+        'When did {x} make you proud of this group?',
+        'What is the funniest memory about {x}?',
+        'What is a promise you’d make about {x}?',
+      ],
+      subjects: [
+        'inside jokes', 'late-night talks', 'road trips', 'helping each other', 'calling out bad ideas',
+        'showing up on time', 'celebrating wins', 'covering for each other', 'sharing food', 'planning surprises',
+        'honest feedback', 'no-judgment zones', 'movie nights', 'game nights', 'keeping secrets',
+        'hype speeches', 'cheering up', 'telling the hard truth', 'being real', 'pushing limits'
+      ],
+    },
   },
   dare: {
-    Soft: [
-      'Speak in movie quotes for 1 minute.',
-      'Do a dramatic slow clap for someone.',
-      'Tell a joke and commit to it.',
-      'Swap seats with someone for the round.',
-    ],
-    Spicy: [
-      'Read your last 3 emojis aloud.',
-      'Let the group change your status for 10 minutes.',
-      'Record a 10-second voice note to someone.',
-      'Share the last photo you saved.',
-    ],
-    Brutal: [
-      'Let the group scroll 10 seconds in your gallery.',
-      'Do 15 pushups or 20 squats.',
-      'Call someone and compliment them weirdly.',
-      'Let someone rewrite one of your bios.',
-    ],
-    'Friends-only': [
-      'Do an impression of someone here.',
-      'Roast yourself for 20 seconds.',
-      'Let the group set a timer and you must hype each person.',
-      'Try to convince everyone you are an alien.',
-    ],
+    Soft: {
+      templates: [
+        'Do a 10-second bit about {x}.',
+        'Act out {x} without words.',
+        'Give someone your best tip on {x}.',
+        'Hum a tune that feels like {x}.',
+        'Narrate {x} like a sports commentator.',
+      ],
+      subjects: [
+        'making tea', 'finding lost socks', 'parallel parking', 'texting a crush', 'waking up late',
+        'forgetting passwords', 'first day at gym', 'cooking pasta', 'board game victories', 'losing Wi‑Fi',
+        'bad hair days', 'rainy afternoons', 'missing the bus', 'shopping on a budget', 'folding laundry',
+        'charging your phone', 'sleeping through alarms', 'sharing chargers', 'borrowing hoodies', 'choosing a movie'
+      ],
+    },
+    Spicy: {
+      templates: [
+        'Give a 15s confident pitch about {x}.',
+        'Mimic how you think {x} flirts.',
+        'Do a dramatic line about {x}.',
+        'Whisper a secret about {x} to the host.',
+        'Show a gesture that means {x}.',
+      ],
+      subjects: [
+        'your best date', 'a smooth opener', 'a red flag', 'a green flag', 'your crush type',
+        'saying “no” boldly', 'complimenting style', 'stealing the aux', 'sharing a cab', 'late-night walks',
+        'secret talents', 'favorite smell', 'a bold outfit', 'dancing close', 'first impressions',
+        'meeting parents', 'awkward silences', 'saving a bad date', 'a spicy text', 'leaving on read'
+      ],
+    },
+    Brutal: {
+      templates: [
+        'Roast {x} in one clean line.',
+        'Confess a tough truth about {x}.',
+        'Imitate how {x} complains.',
+        'Give {x} a “fix this” suggestion.',
+        'Do a mock TED talk on why {x} fails.',
+      ],
+      subjects: [
+        'procrastination', 'overthinking', 'texting etiquette', 'fashion crimes', 'being late',
+        'ghosting people', 'group chat chaos', 'spoilers', 'messy rooms', 'forgetting birthdays',
+        'bad playlists', 'talking over others', 'canceling last minute', 'too many selfies', 'not tipping',
+        'doomscrolling', 'karaoke disasters', 'snoring', 'cup-in-sink syndrome', 'silent treatment'
+      ],
+    },
+    'Friends-only': {
+      templates: [
+        'Do an impression of our last {x}.',
+        'Lead a 10s chant about {x}.',
+        'Give a genuine hype speech on {x}.',
+        'Assign roles for {x} to everyone.',
+        'Recreate the moment when {x}.',
+      ],
+      subjects: [
+        'group trip', 'inside joke', 'shared win', 'epic fail', 'late-night call',
+        'birthday surprise', 'photo dump', 'playlist war', 'movie marathon', 'team project',
+        'unexpected guest', 'roadside stop', 'karaoke night', 'festival day', 'sports match',
+        'rain-out plan', 'campfire story', 'airport sprint', 'secret Santa', 'game night finale'
+      ],
+    },
+  },
+};
+
+const truthPrompts = {
+  truth: {
+    Soft: buildList(truthSeeds.truth.Soft.templates, truthSeeds.truth.Soft.subjects),
+    Spicy: buildList(truthSeeds.truth.Spicy.templates, truthSeeds.truth.Spicy.subjects),
+    Brutal: buildList(truthSeeds.truth.Brutal.templates, truthSeeds.truth.Brutal.subjects),
+    'Friends-only': buildList(truthSeeds.truth['Friends-only'].templates, truthSeeds.truth['Friends-only'].subjects),
+  },
+  dare: {
+    Soft: buildList(truthSeeds.dare.Soft.templates, truthSeeds.dare.Soft.subjects),
+    Spicy: buildList(truthSeeds.dare.Spicy.templates, truthSeeds.dare.Spicy.subjects),
+    Brutal: buildList(truthSeeds.dare.Brutal.templates, truthSeeds.dare.Brutal.subjects),
+    'Friends-only': buildList(truthSeeds.dare['Friends-only'].templates, truthSeeds.dare['Friends-only'].subjects),
   },
 };
 
@@ -136,9 +235,9 @@ const themeTruthPrompts = {
   },
   'after-dark': {
     truth: {
-      Soft: ['What is your safest kink curiosity?', 'Who here gives off "red flag but I like it" energy?', 'When did you last get butterflies?'],
+      Soft: ['What is your safest curiosity?', 'Who here gives off bold-but-intriguing energy?', 'When did you last get butterflies?'],
       Spicy: ['Describe a fantasy in five words.', 'Who would you kiss here if no fallout?', 'What is your most chaotic 2am decision?'],
-      Brutal: ['Who here should never date you and why?', 'What is your worst kept secret about intimacy?', 'When did you fake a feeling?'],
+      Brutal: ['Who here should never date you and why?', 'What is a secret about intimacy you learned the hard way?', 'When did you fake a feeling?'],
       'Friends-only': ['Who in this room is underrated?', 'What rumor about you was true?', 'Who here intimidates you and why?'],
     },
     dare: {
@@ -150,23 +249,68 @@ const themeTruthPrompts = {
   },
 };
 
-const nhiStatements = [
-  'Never have I ever drunk texted an ex.',
-  'Never have I ever lied to get out of plans.',
-  'Never have I ever snooped through a phone.',
-  'Never have I ever cried in public recently.',
-  'Never have I ever dated two people at once.',
-  'Never have I ever forgotten someone’s birthday.',
+const nhiTemplates = [
+  'Never have I ever {x}.',
+  'I have avoided {x}.',
+  'Never have I ever been caught {x}.',
+  'Never have I ever secretly enjoyed {x}.',
 ];
 
-const likelyQuestions = [
-  'Who is most likely to forget their passport?',
-  'Who is most likely to bail last minute?',
-  'Who is most likely to go viral for something weird?',
-  'Who is most likely to start a company?',
-  'Who is most likely to move countries first?',
-  'Who is most likely to text an ex tonight?',
+const nhiSubjects = [
+  'ghosting someone', 'double-texting in panic', 'rehearsing a call in the mirror', 'lying to skip an event', 'stalking an ex online',
+  'oversharing in a group chat', 'hiding a bad grade', 'fake-laughing at a joke', 'pretending to be on a call', 'snooping a friend’s phone',
+  'crying in a bathroom stall', 'forgetting a close friend’s birthday', 'bailing last minute', 'regifting something', 'walking out mid-argument',
+  'doomscrolling until 3am', 'muting a chat for a week', 'blocking someone then unblocking', 'screenshotting a chat to gossip', 'ordering food then canceling plans',
+  'sneaking into a second movie', 'lying about “5 minutes away”', 'ghosting a group project', 'spilling a secret', 'ruining a surprise',
+  'spoiling a show', 'sleep-texting', 'liking an old photo by accident', 'rage-deleting an app', 'pretending not to see someone in public',
+  'faking a sick voice note', 'using airplane mode to avoid delivery calls', 'snacking from a roommate’s stash', 'hiding dishes under the bed', 'canceling plans to stay in PJs',
+  'keeping a burner email', 'reading receipts on', 'being too honest in feedback', 'copying homework', 'tattling as a kid',
+  'missing a flight', 'falling asleep on a call', 'forgetting a pet’s birthday', 'accidentally video-calling a crush', 'using the same excuse twice',
+  'losing someone’s item', 'spilling coffee on a stranger', 'mixing up names', 'going to a party uninvited', 'talking in sleep',
+  'being grounded for sneaking out', 'cheating in a board game', 'peeking at gifts early', 'blaming a sibling', 'pretending to understand a joke',
+  'googling my own name', 'crying over a meme', 'arguing with a bot', 'catfishing for a prank', 'singing on loudspeaker',
+  'using a fake accent', 'skipping school without being sick', 'binge-watching an entire season in one night', 'forgetting an anniversary', 'losing a bet and not paying',
+  'late-night shopping regret', 'replying “who’s this?” to someone I knew', 'lurking in old messages', 'saving screenshots for receipts', 'avoiding a hug',
+  'sending a risky text then airplane mode', 'ghosting after one date', 'lying about food allergies to avoid a dish', 'faking a hobby on a date', 'sharing a location without asking',
+  'failing a diet on day two', 'pretending my phone died', 'using someone else’s Netflix', 'sleeping past an interview alarm', 'claiming Wi‑Fi was down',
+  'hiding a snack in a jacket', 'rage-quitting a game', 'muting a work chat', 'fake-smiling in a photo I hated', 'forgetting a teammate’s name mid-intro',
+  'crashing a Zoom in pajamas', 'leaving a group without goodbye', 'flaking on a friend and feeling guilty', 'accidentally sending a voice note', 'writing a message and deleting it',
+  'ignoring a call while active online', 'spilling tea to the wrong person', 'reusing an old selfie', 'pretending to read a book', 'losing my cool at customer support',
+  'crying over spilled milk literally', 'ruining a group project', 'taking credit for a group idea', 'being late with no excuse', 'sneaking snacks into a theater'
 ];
+
+const nhiStatements = buildList(nhiTemplates, nhiSubjects);
+
+const likelyTemplates = [
+  'Who is most likely to {x}?',
+  'Who would we trust to {x}?',
+  'Who in this room might {x} first?',
+  'Who here could end up {x}?',
+];
+
+const likelySubjects = [
+  'forget their phone on a rideshare', 'start a side hustle that blows up', 'go viral for a wholesome clip', 'ghost social media for a month', 'forget a friend’s birthday',
+  'host a legendary party', 'get lost but make friends', 'sleep through their alarm', 'cry at a movie night', 'win a dance-off',
+  'become a minimalist', 'become a maximalist', 'start a book club', 'launch a podcast', 'train for a marathon',
+  'move abroad on a whim', 'learn a new language', 'try van life', 'adopt a surprise pet', 'cook for the whole group',
+  'show up overdressed', 'show up underdressed', 'start a fashion trend', 'be late to their own event', 'forget the room code',
+  'become famous for karaoke', 'drop a viral meme', 'quit a job dramatically', 'become a great parent', 'invest early and retire young',
+  'start a band', 'write a bestseller', 'win a trivia night', 'join a reality show', 'lose their passport',
+  'lead a protest', 'plan the perfect trip', 'become a teacher', 'become a chef', 'become a stand-up comic',
+  'send a risky text', 'get caught talking to a pet', 'forget where they parked', 'become a morning person', 'stay a night owl forever',
+  'spill coffee on themselves', 'binge an entire series overnight', 'forget to reply for days', 'reply instantly always', 'organize the group chat',
+  'muting the group chat', 'win a lottery and keep quiet', 'win a lottery and tell everyone', 'gift amazing presents', 'forget the gift receipt',
+  'propose first', 'get proposed to in public', 'trip on stage', 'start a prank war', 'end a prank war',
+  'buy matching outfits for the group', 'sing in the shower too loud', 'make a documentary', 'learn to DJ', 'own too many plants',
+  'become a coffee snob', 'start a tea ritual', 'collect vinyls', 'lose keys weekly', 'lock themselves out',
+  'join a startup', 'become a CEO', 'become a counselor friend', 'become a chaos agent', 'overpack every trip',
+  'underpack every trip', 'forget to charge their phone', 'carry spare chargers', 'organize surprise parties', 'spill a secret by accident',
+  'keep every secret', 'get starstruck', 'pretend not to be starstruck', 'learn magic tricks', 'get into extreme sports',
+  'take the best candids', 'post the funniest stories', 'adopt a senior pet', 'rescue a stray', 'volunteer every weekend',
+  'lose track of time while gaming', 'pick up a random hobby monthly', 'start a YouTube channel', 'quit sugar for real', 'lead a fitness challenge'
+];
+
+const likelyQuestions = buildList(likelyTemplates, likelySubjects);
 
 const spyWords = [
   'Airport', 'Cinema', 'Library', 'Arcade', 'Rooftop', 'Beach', 'Museum', 'Coffee shop', 'Supermarket', 'Gym'
