@@ -52,6 +52,7 @@ const state = {
   likely: { round: null, votes: {} },
   spy: { round: null, votes: {} },
   usedPrompts: {},
+  aiUnavailable: false,
 };
 
 const randomFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -266,15 +267,22 @@ const fetchAIPrompt = async ({ gameId, mode, category, bucket }) => {
       }),
     });
     if (!res.ok) {
-      if (res.status === 400) {
+      if (res.status === 400 && !state.aiUnavailable) {
         showToast('AI prompts disabled (no API key). Using local list.', 'warning');
       }
+      state.aiUnavailable = true;
       return null;
     }
     const data = await res.json();
-    return data?.prompt || null;
+    const prompt = data?.prompt || null;
+    if (!prompt) state.aiUnavailable = true;
+    return prompt;
   } catch (err) {
     console.error('AI prompt fetch failed', err);
+    if (!state.aiUnavailable) {
+      showToast('AI prompts unavailable. Falling back to local.', 'warning');
+    }
+    state.aiUnavailable = true;
     return null;
   }
 };

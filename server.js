@@ -4,6 +4,7 @@ import { WebSocketServer } from 'ws';
 import os from 'os';
 import path from 'path';
 import crypto from 'crypto';
+import fetch from 'node-fetch';
 import { fileURLToPath } from 'url';
 
 const app = express();
