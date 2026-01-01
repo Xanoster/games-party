@@ -51,7 +51,10 @@ const state = {
   nhi: { round: null, votes: {} },
   likely: { round: null, votes: {} },
   spy: { round: null, votes: {} },
+  usedPrompts: {},
 };
+
+const randomFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 const games = [
   { id: 'truth', label: 'Truth or Dare', blurb: 'Bottle spin, expose votes, timer and punish.', tags: ['Social', 'High chaos'] },
@@ -226,6 +229,53 @@ const haptic = (intensity = 'light') => {
     case 'light': navigator.vibrate(10); break;
     case 'medium': navigator.vibrate(25); break;
     case 'heavy': navigator.vibrate([30, 20, 30]); break;
+  }
+};
+
+// Keep a short memory of prompts per bucket to avoid repeats
+const rememberPrompt = (bucket, prompt) => {
+  if (!prompt) return;
+  if (!state.usedPrompts[bucket]) state.usedPrompts[bucket] = [];
+  state.usedPrompts[bucket].push(prompt);
+  state.usedPrompts[bucket] = state.usedPrompts[bucket].slice(-25);
+};
+
+const pickUniquePrompt = (bucket, list) => {
+  const clean = (list || []).filter(Boolean);
+  if (!clean.length) return null;
+  const used = new Set(state.usedPrompts[bucket] || []);
+  const fresh = clean.filter((p) => !used.has(p));
+  const pool = fresh.length ? fresh : clean;
+  const choice = randomFrom(pool);
+  rememberPrompt(bucket, choice);
+  return choice;
+};
+
+const fetchAIPrompt = async ({ gameId, mode, category, bucket }) => {
+  try {
+    const res = await fetch('/api/ai-prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gameId,
+        mode,
+        category,
+        theme: state.settings.theme,
+        players: state.players,
+        recent: bucket ? state.usedPrompts[bucket] || [] : [],
+      }),
+    });
+    if (!res.ok) {
+      if (res.status === 400) {
+        showToast('AI prompts disabled (no API key). Using local list.', 'warning');
+      }
+      return null;
+    }
+    const data = await res.json();
+    return data?.prompt || null;
+  } catch (err) {
+    console.error('AI prompt fetch failed', err);
+    return null;
   }
 };
 
@@ -502,8 +552,6 @@ const updateRoomUI = () => {
 const send = (type, payload) => socket.send(JSON.stringify({ type, payload }));
 const relay = (payload) => send('relay', payload);
 
-const randomFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
 const SPIN_MS = 8000;
 
 const playBottleSpin = (round) => {
@@ -615,11 +663,18 @@ const renderTruth = () => {
   };
 
   // Choose Truth or Dare - called by selected person
-  const chooseMode = (mode) => {
+  const chooseMode = async (mode) => {
     if (!state.truth.round) return;
     if (state.clientId !== state.truth.round.targetId) return; // Only selected person
-    const promptList = themedTruthListEnhanced ? themedTruthListEnhanced(mode, state.truth.category) : themedTruthList(mode, state.truth.category);
-    const prompt = randomFrom(promptList);
+    const bucket = `truth-${mode}-${state.truth.category}`;
+    let prompt = await fetchAIPrompt({ gameId: 'truth-or-dare', mode, category: state.truth.category, bucket });
+    if (prompt) {
+      rememberPrompt(bucket, prompt);
+    } else {
+      const promptList = themedTruthListEnhanced ? themedTruthListEnhanced(mode, state.truth.category) : themedTruthList(mode, state.truth.category);
+      prompt = pickUniquePrompt(bucket, promptList);
+    }
+    if (!prompt) return;
     state.truth.round.mode = mode;
     state.truth.round.prompt = prompt;
     relay({ channel: 'truth', action: 'choice', mode, prompt });
@@ -748,8 +803,15 @@ const renderNHI = () => {
   
   if (isHost) {
     const btn = el('nhiStart');
-    if (btn) btn.onclick = () => {
-      const statement = randomFrom(nhiStatements);
+    if (btn) btn.onclick = async () => {
+      const bucket = 'nhi';
+      let statement = await fetchAIPrompt({ gameId: 'never-have-i-ever', mode: 'statement', bucket });
+      if (statement) {
+        rememberPrompt(bucket, statement);
+      } else {
+        statement = pickUniquePrompt(bucket, nhiStatements);
+      }
+      if (!statement) return;
       const round = { statement };
       state.nhi.round = round;
       state.nhi.votes = {};
@@ -825,8 +887,15 @@ const renderLikely = () => {
   
   if (isHost) {
     const btn = el('likelyStart');
-    if (btn) btn.onclick = () => {
-      const question = randomFrom(likelyQuestions);
+    if (btn) btn.onclick = async () => {
+      const bucket = 'likely';
+      let question = await fetchAIPrompt({ gameId: 'most-likely', mode: 'callout', bucket });
+      if (question) {
+        rememberPrompt(bucket, question);
+      } else {
+        question = pickUniquePrompt(bucket, likelyQuestions);
+      }
+      if (!question) return;
       const round = { question };
       state.likely.round = round;
       state.likely.votes = {};
